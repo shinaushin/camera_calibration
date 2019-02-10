@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="camera_calibration" type="send_images" name="send_images" output="screen"/>
+</launch>
