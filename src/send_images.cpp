@@ -2,6 +2,7 @@
 #include <image_transport/image_transport.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
+#include <ros/package.h>
 
 using namespace std;
 
@@ -19,8 +20,11 @@ int main(int argc, char** argv) {
     sensor_msgs::ImagePtr msg;
     while(nh.ok() && i < 20) {
         string num = to_string(im_num+i);
-        image = cv::imread("../data/IMG_17" + num + ".jpg", CV_LOAD_IMAGE_COLOR);
-        cv::waitKey(0);
+        string path = ros::package::getPath("camera_calibration") + "/data/IMG_17"+num+".JPG";
+        ROS_INFO_STREAM(path);
+        image = cv::imread(path, CV_LOAD_IMAGE_COLOR);
+        // cv::imshow("Display", image);
+        // cv::waitKey(0);
         msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
         pub.publish(msg);
         ROS_INFO("Image published.");
