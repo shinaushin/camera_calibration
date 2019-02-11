@@ -15,7 +15,6 @@ int main(int argc, char** argv) {
     
     ros::Rate rate(5);
     while(pub.getNumSubscribers() == 0) {
-        ROS_INFO("sleeping");
         rate.sleep();
     }
 
@@ -25,18 +24,15 @@ int main(int argc, char** argv) {
     sensor_msgs::ImagePtr msg;
     float resize_factor = 0.16; // resize image to 640 x 480
    
-    ROS_INFO("Begin publishing");
     while(nh.ok() && i < 20) {
         string num = to_string(im_num+i);
         string path = ros::package::getPath("camera_calibration") + "/data/IMG_17"+num+".JPG";
-        ROS_INFO_STREAM(path);
+        // ROS_INFO_STREAM(path);
         image = cv::imread(path, CV_LOAD_IMAGE_COLOR);
         cv::resize(image, image, cv::Size(), resize_factor, resize_factor);
-        // cv::imshow("Display", image);
-        // cv::waitKey(0);
         msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
         pub.publish(msg);
-        ROS_INFO("Image published.");
+        // ROS_INFO("Image published.");
         i++;
         ros::spinOnce();
         rate.sleep();

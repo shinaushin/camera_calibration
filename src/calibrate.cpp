@@ -16,6 +16,8 @@ class calibrate {
         vector<vector<cv::Point2f>> all_centers;
         ros::NodeHandle nh;
         image_transport::Subscriber sub;
+        cv::Size s = cv::Size(4,11);
+        cv::Size pic_size = cv::Size(640,480);
 
     public:
 
@@ -25,15 +27,19 @@ class calibrate {
 
         void callback(const sensor_msgs::ImageConstPtr& msg) {
             try {
-                ROS_INFO("Image received");
+                // ROS_INFO("Image received");
                 vector<cv::Point2f> centers;
                 cv::Mat image = cv_bridge::toCvShare(msg, "bgr8")->image;
-                bool found = cv::findCirclesGrid(image, cv::Size(4,11), centers, cv::CALIB_CB_ASYMMETRIC_GRID);
+                bool found = cv::findCirclesGrid(image, s, centers, cv::CALIB_CB_ASYMMETRIC_GRID);
                 // ROS_INFO_STREAM(found);
-                // cv::cornerSubPix(image, centers, cv::Size(11,11), cv::Size(-1,-1), cv::TermCriteria(cv::TermCriteria::EPS+cv::TermCriteria::COUNT, 30, 0.1 ));
-                cv::drawChessboardCorners(image, cv::Size(4,11), cv::Mat(centers), found);
-                cv::imshow("view", image);
-                cv::waitKey(30);
+                
+                cv::Mat gray;
+                cv::cvtColor(image, gray, cv::COLOR_RGB2GRAY);
+                cv::cornerSubPix(gray, centers, cv::Size(11,11), cv::Size(-1,-1), cv::TermCriteria(cv::TermCriteria::EPS+cv::TermCriteria::COUNT, 30, 0.1 ));
+                
+                // cv::drawChessboardCorners(image, s, cv::Mat(centers), found);
+                // cv::imshow("view", image);
+                // cv::waitKey(30);
 
                 all_centers.push_back(centers);
                 
@@ -64,12 +70,12 @@ class calibrate {
            
             vector<vector<cv::Point3f>> obj_pts(1);
             create_obj_pts(obj_pts[0]);
-            for (int i = 0; i < obj_pts[0].size(); i++) {
-                ROS_INFO_STREAM(obj_pts[0][i]);
+            for (int i = 0; i < all_centers[0].size(); i++) {
+                ROS_INFO_STREAM(all_centers[0][i]);
             }
             obj_pts.resize(all_centers.size(), obj_pts[0]);
 
-            double rms = calibrateCamera(obj_pts, all_centers, cv::Size(640, 480), camMat, distCoeffs, rvecs, tvecs);
+            double rms = calibrateCamera(obj_pts, all_centers, pic_size, camMat, distCoeffs, rvecs, tvecs);
             ROS_INFO_STREAM(rms);
 
             if (rms < 1.0) {
@@ -81,9 +87,9 @@ class calibrate {
         }
 
         void create_obj_pts(vector<cv::Point3f>& corners) {
-            for (int i = 11; i > 0; i--) {
-                for (int j = 4; j > 0; j--) {
-                    corners.push_back(cv::Point3f( (2*(j-1) + (11-i+1)%2), i-1, 0)); 
+            for (int i = s.height; i > 0; i--) {
+                for (int j = s.width; j > 0; j--) {
+                    corners.push_back(cv::Point3f( (2*(j-1) + (s.height-i+1)%2), i-1, 0)); 
                 }
             }
         }
@@ -92,10 +98,8 @@ class calibrate {
             string mode = req.mode;
             ROS_INFO_STREAM(mode);
             if (mode == "calibrate") {
-                ROS_INFO("Creating listener");
                 image_transport::ImageTransport it(nh);
                 sub = it.subscribe("image_raw", 20, &calibrate::callback, this);
-                ROS_INFO("Created");
             }
             
             return true;
@@ -104,18 +108,12 @@ class calibrate {
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "calibration");
-    
-//    cv::namedWindow("view");
-//    cv::startWindowThread();
-
     ros::NodeHandle nh;
     
-    // ros::ServiceServer test = nh.advertiseService("cal", add);
     calibrate cal_obj(nh);
     ros::ServiceServer ss = nh.advertiseService("cal", &calibrate::calib, &cal_obj);    
 
     ros::spin();
-//    cv::destroyWindow("view");
 
     return 0;
 }
