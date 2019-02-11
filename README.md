@@ -9,4 +9,5 @@ The message's request is a simple string indicating the mode of the program.
 The service can be called from the terminal using: rosservice call /cal "calibrate"
 
 Example output YAML file can be found in root of package folder: intrinsics.yml
+
 Final RMS: 0.205215
