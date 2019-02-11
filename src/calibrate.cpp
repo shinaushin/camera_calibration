@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <ros/package.h>
 #include <image_transport/image_transport.h>
 #include <opencv2/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
@@ -37,16 +38,30 @@ class calibrate {
                 all_centers.push_back(centers);
                 
                 if (all_centers.size() == 20) {
-                    conduct_calibration();     
+                    cv::Mat camMat = cv::Mat::eye(3,3, CV_64F);
+                    cv::Mat distCoeffs = cv::Mat::zeros(8,1,CV_64F);
+                    vector<cv::Mat> rvecs;
+                    vector<cv::Mat> tvecs;
+                    bool success = conduct_calibration(camMat, distCoeffs, rvecs, tvecs);   
+                    if (success) {
+                        string path = ros::package::getPath("camera_calibration");
+                        ROS_INFO_STREAM(path);
+                        string file = path + "/intrinsics.yml";
+                        cv::FileStorage fs(file, cv::FileStorage::WRITE);
+                        fs << "Camera Matrix" << camMat;
+                        fs << "Distortion Coefficients" << distCoeffs;
+                        fs.release();
+                        ROS_INFO("Finished writing to YAML file");
+                    }  
                 }
             } catch (cv_bridge::Exception& e) {
                 ROS_ERROR("Could not convert");
             }
         }
 
-        void conduct_calibration() {
+        bool conduct_calibration(cv::Mat& camMat, cv::Mat& distCoeffs, vector<cv::Mat>& rvecs, vector<cv::Mat>& tvecs) {
             ROS_INFO("Beginning calibration");
-            
+           
             vector<vector<cv::Point3f>> obj_pts(1);
             create_obj_pts(obj_pts[0]);
             for (int i = 0; i < obj_pts[0].size(); i++) {
@@ -54,15 +69,15 @@ class calibrate {
             }
             obj_pts.resize(all_centers.size(), obj_pts[0]);
 
-            cv::Mat camMat = cv::Mat::eye(3,3, CV_64F);
-            cv::Mat distCoeffs = cv::Mat::zeros(8,1, CV_64F);
-
-            vector<cv::Mat> rvecs;
-            vector<cv::Mat> tvecs;
-            double rms = calibrateCamera(obj_pts, all_centers, cv::Size(640, 480), camMat, distCoeffs, rvecs, tvecs, CV_CALIB_FIX_K4|CV_CALIB_FIX_K5);
-
+            double rms = calibrateCamera(obj_pts, all_centers, cv::Size(640, 480), camMat, distCoeffs, rvecs, tvecs);
             ROS_INFO_STREAM(rms);
-            ROS_INFO("Calibration complete");
+
+            if (rms < 1.0) {
+                ROS_INFO("Calibration complete");
+                return true;
+            } else {
+                return false;
+            } 
         }
 
         void create_obj_pts(vector<cv::Point3f>& corners) {
