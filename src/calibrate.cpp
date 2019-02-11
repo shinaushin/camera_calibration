@@ -13,11 +13,11 @@ using namespace std;
 class calibrate {
 
     private:
-        vector<vector<cv::Point2f>> all_centers;
+        vector<vector<cv::Point2f>> all_centers; // vector of vector of all centers found in images
         ros::NodeHandle nh;
-        image_transport::Subscriber sub;
-        cv::Size s = cv::Size(4,11);
-        cv::Size pic_size = cv::Size(640,480);
+        image_transport::Subscriber sub; // subscribe to topic where images are sent
+        cv::Size s = cv::Size(4,11); //size of circle grid
+        cv::Size pic_size = cv::Size(640,480); //size of images that are sent
 
     public:
 
@@ -25,6 +25,7 @@ class calibrate {
             nh = n;
         }
 
+        // subscriber callback
         void callback(const sensor_msgs::ImageConstPtr& msg) {
             try {
                 // ROS_INFO("Image received");
@@ -43,6 +44,7 @@ class calibrate {
 
                 all_centers.push_back(centers);
                 
+                // after we process all 20 images, begin calibration
                 if (all_centers.size() == 20) {
                     cv::Mat camMat = cv::Mat::eye(3,3, CV_64F);
                     cv::Mat distCoeffs = cv::Mat::zeros(8,1,CV_64F);
@@ -65,14 +67,15 @@ class calibrate {
             }
         }
 
+        // set up all params to call calibratecamera function
         bool conduct_calibration(cv::Mat& camMat, cv::Mat& distCoeffs, vector<cv::Mat>& rvecs, vector<cv::Mat>& tvecs) {
             ROS_INFO("Beginning calibration");
            
             vector<vector<cv::Point3f>> obj_pts(1);
             create_obj_pts(obj_pts[0]);
-            for (int i = 0; i < all_centers[0].size(); i++) {
-                ROS_INFO_STREAM(all_centers[0][i]);
-            }
+            // for (int i = 0; i < all_centers[0].size(); i++) {
+                // ROS_INFO_STREAM(all_centers[0][i]);
+            // }
             obj_pts.resize(all_centers.size(), obj_pts[0]);
 
             double rms = calibrateCamera(obj_pts, all_centers, pic_size, camMat, distCoeffs, rvecs, tvecs);
@@ -86,6 +89,7 @@ class calibrate {
             } 
         }
 
+        // creates points of where circles may be in 3d space
         void create_obj_pts(vector<cv::Point3f>& corners) {
             for (int i = s.height; i > 0; i--) {
                 for (int j = s.width; j > 0; j--) {
@@ -94,10 +98,12 @@ class calibrate {
             }
         }
 
+        // service callback
         bool calib(camera_calibration::Calibrate::Request &req, camera_calibration::Calibrate::Response &res) {
             string mode = req.mode;
             ROS_INFO_STREAM(mode);
             if (mode == "calibrate") {
+                // begins listening for images
                 image_transport::ImageTransport it(nh);
                 sub = it.subscribe("image_raw", 20, &calibrate::callback, this);
             }
@@ -109,7 +115,8 @@ class calibrate {
 int main(int argc, char **argv) {
     ros::init(argc, argv, "calibration");
     ros::NodeHandle nh;
-    
+ 
+    // initialize service   
     calibrate cal_obj(nh);
     ros::ServiceServer ss = nh.advertiseService("cal", &calibrate::calib, &cal_obj);    
 
