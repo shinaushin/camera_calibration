@@ -4,8 +4,6 @@
 #include <cv_bridge/cv_bridge.h>
 #include <ros/package.h>
 
-using namespace std;
-
 int main(int argc, char** argv) {
     ros::init(argc, argv, "image_publisher");
     ros::NodeHandle nh;
@@ -28,8 +26,8 @@ int main(int argc, char** argv) {
    
     // send 20 images from data folder
     while(nh.ok() && i < 20) {
-        string num = to_string(im_num+i);
-        string path = ros::package::getPath("camera_calibration") + "/data/IMG_17"+num+".JPG";
+        std::string num = std::to_string(im_num+i);
+        std::string path = ros::package::getPath("camera_calibration") + "/data/IMG_17"+num+".JPG";
         // ROS_INFO_STREAM(path);
         image = cv::imread(path, CV_LOAD_IMAGE_COLOR);
         cv::resize(image, image, cv::Size(), resize_factor, resize_factor);

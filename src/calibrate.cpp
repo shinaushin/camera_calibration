@@ -8,12 +8,10 @@
 #include <opencv2/calib3d.hpp>
 #include <camera_calibration/Calibrate.h>
 
-using namespace std;
-
 class calibrate {
 
     private:
-        vector<vector<cv::Point2f>> all_centers; // vector of vector of all centers found in images
+        std::vector<std::vector<cv::Point2f>> all_centers; // vector of vector of all centers found in images
         ros::NodeHandle nh;
         image_transport::Subscriber sub; // subscribe to topic where images are sent
         cv::Size s = cv::Size(4,11); //size of circle grid
@@ -29,7 +27,7 @@ class calibrate {
         void callback(const sensor_msgs::ImageConstPtr& msg) {
             try {
                 // ROS_INFO("Image received");
-                vector<cv::Point2f> centers;
+                std::vector<cv::Point2f> centers;
                 cv::Mat image = cv_bridge::toCvShare(msg, "bgr8")->image;
                 bool found = cv::findCirclesGrid(image, s, centers, cv::CALIB_CB_ASYMMETRIC_GRID);
                 // ROS_INFO_STREAM(found);
@@ -48,13 +46,13 @@ class calibrate {
                 if (all_centers.size() == 20) {
                     cv::Mat camMat = cv::Mat::eye(3,3, CV_64F);
                     cv::Mat distCoeffs = cv::Mat::zeros(8,1,CV_64F);
-                    vector<cv::Mat> rvecs;
-                    vector<cv::Mat> tvecs;
+                    std::vector<cv::Mat> rvecs;
+                    std::vector<cv::Mat> tvecs;
                     bool success = conduct_calibration(camMat, distCoeffs, rvecs, tvecs);   
                     if (success) {
-                        string path = ros::package::getPath("camera_calibration");
+                        std::string path = ros::package::getPath("camera_calibration");
                         ROS_INFO_STREAM(path);
-                        string file = path + "/intrinsics.yml";
+                        std::string file = path + "/intrinsics.yml";
                         cv::FileStorage fs(file, cv::FileStorage::WRITE);
                         fs << "Camera Matrix" << camMat;
                         fs << "Distortion Coefficients" << distCoeffs;
@@ -68,10 +66,10 @@ class calibrate {
         }
 
         // set up all params to call calibratecamera function
-        bool conduct_calibration(cv::Mat& camMat, cv::Mat& distCoeffs, vector<cv::Mat>& rvecs, vector<cv::Mat>& tvecs) {
+        bool conduct_calibration(cv::Mat& camMat, cv::Mat& distCoeffs, std::vector<cv::Mat>& rvecs, std::vector<cv::Mat>& tvecs) {
             ROS_INFO("Beginning calibration");
            
-            vector<vector<cv::Point3f>> obj_pts(1);
+            std::vector<std::vector<cv::Point3f>> obj_pts(1);
             create_obj_pts(obj_pts[0]);
             // for (int i = 0; i < all_centers[0].size(); i++) {
                 // ROS_INFO_STREAM(all_centers[0][i]);
@@ -90,7 +88,7 @@ class calibrate {
         }
 
         // creates points of where circles may be in 3d space
-        void create_obj_pts(vector<cv::Point3f>& corners) {
+        void create_obj_pts(std::vector<cv::Point3f>& corners) {
             for (int i = s.height; i > 0; i--) {
                 for (int j = s.width; j > 0; j--) {
                     corners.push_back(cv::Point3f( (2*(j-1) + (s.height-i+1)%2), i-1, 0)); 
@@ -100,7 +98,7 @@ class calibrate {
 
         // service callback
         bool calib(camera_calibration::Calibrate::Request &req, camera_calibration::Calibrate::Response &res) {
-            string mode = req.mode;
+            std::string mode = req.mode;
             ROS_INFO_STREAM(mode);
             if (mode == "calibrate") {
                 // begins listening for images
