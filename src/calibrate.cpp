@@ -46,9 +46,31 @@ class calibrate {
 
         void conduct_calibration() {
             ROS_INFO("Beginning calibration");
-
-            create_obj_pts();
             
+            vector<vector<cv::Point3f>> obj_pts(1);
+            create_obj_pts(obj_pts[0]);
+            for (int i = 0; i < obj_pts[0].size(); i++) {
+                ROS_INFO_STREAM(obj_pts[0][i]);
+            }
+            obj_pts.resize(all_centers.size(), obj_pts[0]);
+
+            cv::Mat camMat = cv::Mat::eye(3,3, CV_64F);
+            cv::Mat distCoeffs = cv::Mat::zeros(8,1, CV_64F);
+
+            vector<cv::Mat> rvecs;
+            vector<cv::Mat> tvecs;
+            double rms = calibrateCamera(obj_pts, all_centers, cv::Size(640, 480), camMat, distCoeffs, rvecs, tvecs, CV_CALIB_FIX_K4|CV_CALIB_FIX_K5);
+
+            ROS_INFO_STREAM(rms);
+            ROS_INFO("Calibration complete");
+        }
+
+        void create_obj_pts(vector<cv::Point3f>& corners) {
+            for (int i = 11; i > 0; i--) {
+                for (int j = 4; j > 0; j--) {
+                    corners.push_back(cv::Point3f( (2*(j-1) + (11-i+1)%2), i-1, 0)); 
+                }
+            }
         }
 
         bool calib(camera_calibration::Calibrate::Request &req, camera_calibration::Calibrate::Response &res) {
