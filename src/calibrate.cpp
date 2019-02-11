@@ -24,7 +24,7 @@ class calibrate {
         }
 
         // subscriber callback
-        void callback(const sensor_msgs::ImageConstPtr& msg) {
+        void subscriber_callback(const sensor_msgs::ImageConstPtr& msg) {
             try {
                 // ROS_INFO("Image received");
                 std::vector<cv::Point2f> centers;
@@ -97,13 +97,13 @@ class calibrate {
         }
 
         // service callback
-        bool calib(camera_calibration::Calibrate::Request &req, camera_calibration::Calibrate::Response &res) {
+        bool service_callback(camera_calibration::Calibrate::Request &req, camera_calibration::Calibrate::Response &res) {
             std::string mode = req.mode;
             ROS_INFO_STREAM(mode);
             if (mode == "calibrate") {
                 // begins listening for images
                 image_transport::ImageTransport it(nh);
-                sub = it.subscribe("image_raw", 20, &calibrate::callback, this);
+                sub = it.subscribe("image_raw", 20, &calibrate::subscriber_callback, this);
             }
             
             return true;
@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
  
     // initialize service   
     calibrate cal_obj(nh);
-    ros::ServiceServer ss = nh.advertiseService("cal", &calibrate::calib, &cal_obj);    
+    ros::ServiceServer ss = nh.advertiseService("calibrate", &calibrate::service_callback, &cal_obj);    
 
     ros::spin();
 

@@ -6,7 +6,7 @@ There are two nodes: send_images, calibrate
 Program can be launched using: roslaunch camera_calibration start_calibration.launch.
 Service callback activates calibration process upon receipt of Calibrate.srv message.
 The message's request is a simple string indicating the mode of the program.
-The service can be called from the terminal using: rosservice call /cal "calibrate".
+The service can be called from the terminal using: rosservice call /calibrate "calibrate".
 
 Example output YAML file can be found in root of package folder: intrinsics.yml
 
