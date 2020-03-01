@@ -1,3 +1,6 @@
+# Ellipse_Generator.py
+# @author: Austin Shin
+
 import math
 import numpy as np
 import matplotlib.pyplot as plt
@@ -129,11 +132,13 @@ class Ellipse_Generator:
                 grid_x = round(x)
                 grid_y = round(y)
                 if self.bool_grid[(grid_x, grid_y)]: # blue to gray
-                    self.ax.scatter(grid_x, grid_y, s=4, facecolor='0.4', marker='s')
+                    self.ax.scatter(grid_x, grid_y, s=4, facecolor='0.4',
+                        marker='s')
                     plt.gray()
                     self.bool_grid[(grid_x, grid_y)] = False
                 else: # gray to blue
-                    self.ax.scatter(grid_x, grid_y, color='blue', s=4, marker='s')
+                    self.ax.scatter(grid_x, grid_y, color='blue', s=4,
+                        marker='s')
                     self.bool_grid[(grid_x, grid_y)] = True
 
                 self.ax.axis('equal')
@@ -153,7 +158,8 @@ class Ellipse_Generator:
         self.ax.clear()
 
         # draw grid of gray points
-        self.ax.scatter(self.grid_x, self.grid_y, s=4, facecolor='0.4', marker='s')
+        self.ax.scatter(self.grid_x, self.grid_y, s=4, facecolor='0.4', 
+            arker='s')
         plt.gray()
         self.ax.set_xticks([])
         self.ax.set_yticks([])
@@ -253,7 +259,8 @@ class Ellipse_Generator:
         self.ax.clear()
 
         # draw grid of gray points
-        self.ax.scatter(self.grid_x, self.grid_y, s=4, facecolor='0.4', marker='s')
+        self.ax.scatter(self.grid_x, self.grid_y, s=4, facecolor='0.4',
+            marker='s')
         plt.gray()
         self.ax.set_xticks([])
         self.ax.set_yticks([])
@@ -302,7 +309,8 @@ class Ellipse_Generator:
         self.ax.clear()
 
         # draw grid of gray points
-        self.ax.scatter(self.grid_x, self.grid_y, s=4, facecolor='0.4', marker='s')
+        self.ax.scatter(self.grid_x, self.grid_y, s=4, facecolor='0.4',
+            marker='s')
         plt.gray()
         self.ax.set_xticks([])
         self.ax.set_yticks([])

@@ -1,3 +1,6 @@
+# Circle_Digitizer.py
+# @author: Austin Shin
+
 import math
 import numpy as np
 import matplotlib.pyplot as plt
@@ -131,7 +134,8 @@ class Circle_Digitizer:
                     print("Not enough blue points to construct red circles.")
 
                 # draw blue circle
-                blue_circ = plt.Circle((self.cx, self.cy), r, color='b', fill=False)
+                blue_circ = plt.Circle((self.cx, self.cy), r, color='b',
+                    fill=False)
                 self.ax.add_artist(blue_circ)
 
                 plt.axis('equal')

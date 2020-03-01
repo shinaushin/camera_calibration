@@ -4,6 +4,12 @@
 #include <cv_bridge/cv_bridge.h>
 #include <ros/package.h>
 
+/**
+ * send_images.cpp
+ * Purpose: send images to use for camera calibration
+ * 
+ * @author Austin Shin
+ */
 int main(int argc, char** argv) {
     ros::init(argc, argv, "image_publisher");
     ros::NodeHandle nh;
@@ -27,7 +33,8 @@ int main(int argc, char** argv) {
     // send 20 images from data folder
     while(nh.ok() && i < 20) {
         std::string num = std::to_string(im_num+i);
-        std::string path = ros::package::getPath("camera_calibration") + "/data/IMG_17"+num+".JPG";
+        std::string path = ros::package::getPath("camera_calibration") +
+            "/data/IMG_17"+num+".JPG";
         // ROS_INFO_STREAM(path);
         image = cv::imread(path, CV_LOAD_IMAGE_COLOR);
         cv::resize(image, image, cv::Size(), resize_factor, resize_factor);
@@ -35,6 +42,7 @@ int main(int argc, char** argv) {
         pub.publish(msg);
         ROS_INFO("Image published.");
         i++;
+        
         ros::spinOnce();
         rate.sleep();
     }

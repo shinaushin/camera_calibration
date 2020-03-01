@@ -8,22 +8,40 @@
 #include <opencv2/calib3d.hpp>
 #include <camera_calibration/Calibrate.h>
 
+/**
+ * calibrate.cpp
+ * Purpose: calibrate camera using asymmetric grid of circles
+ * 
+ * @author Austin Shin
+ */
 class calibrate {
 
     private:
-        std::vector<std::vector<cv::Point2f>> all_centers; // vector of vector of all centers found in images
+        // vector of vector of all centers found in images
+        std::vector<std::vector<cv::Point2f>> all_centers;
         ros::NodeHandle nh;
-        image_transport::Subscriber sub; // subscribe to topic where images are sent
-        cv::Size s = cv::Size(4,11); //size of circle grid
-        cv::Size pic_size = cv::Size(640,480); //size of images that are sent
+        // subscribe to topic where images are sent
+        image_transport::Subscriber sub;
+        cv::Size s = cv::Size(4,11); // size of circle grid
+        cv::Size pic_size = cv::Size(640,480); // size of images that are sent
 
     public:
-
+        /**
+         * Constructor
+         * 
+         * @param n ROS nodehandle
+         * @return None
+         */
         calibrate(ros::NodeHandle &n) {
             nh = n;
         }
 
-        // subscriber callback
+        /**
+         * Callback for subscriber when image is received
+         * 
+         * @param msg pointer to image
+         * @return None
+         */
         void subscriber_callback(const sensor_msgs::ImageConstPtr& msg) {
             try {
                 // ROS_INFO("Image received");
@@ -48,9 +66,11 @@ class calibrate {
                     cv::Mat distCoeffs = cv::Mat::zeros(8,1,CV_64F);
                     std::vector<cv::Mat> rvecs;
                     std::vector<cv::Mat> tvecs;
-                    bool success = conduct_calibration(camMat, distCoeffs, rvecs, tvecs);   
+                    bool success = conduct_calibration(camMat, distCoeffs,
+                        rvecs, tvecs);   
                     if (success) {
-                        std::string path = ros::package::getPath("camera_calibration");
+                        std::string path =
+                            ros::package::getPath("camera_calibration");
                         ROS_INFO_STREAM(path);
                         std::string file = path + "/intrinsics.yml";
                         cv::FileStorage fs(file, cv::FileStorage::WRITE);
@@ -65,7 +85,15 @@ class calibrate {
             }
         }
 
-        // set up all params to call calibratecamera function
+        /**
+         * Set up parameters to begin calibration
+         * 
+         * @param camMat intrinsic camera matrix
+         * @param distCoeffs distortion coefficients of camera
+         * @param rvecs rotation vectors
+         * @param tvecs translation vectors
+         * @return status of calibration
+         */
         bool conduct_calibration(cv::Mat& camMat, cv::Mat& distCoeffs, std::vector<cv::Mat>& rvecs, std::vector<cv::Mat>& tvecs) {
             ROS_INFO("Beginning calibration");
            
@@ -87,7 +115,12 @@ class calibrate {
             } 
         }
 
-        // creates points of where circles may be in 3d space
+        /**
+         * Creates vector of points of where circles are located in 3d space
+         * 
+         * @param corners list of circle centers
+         * @return None
+         */
         void create_obj_pts(std::vector<cv::Point3f>& corners) {
             for (int i = s.height; i > 0; i--) {
                 for (int j = s.width; j > 0; j--) {
@@ -96,8 +129,16 @@ class calibrate {
             }
         }
 
-        // service callback
-        bool service_callback(camera_calibration::Calibrate::Request &req, camera_calibration::Calibrate::Response &res) {
+        /**
+         * Service callback to trigger calibration
+         * 
+         * @param req service request
+         * @param res service response
+         * @return boolean indicator for service status
+         */
+        bool service_callback(
+                camera_calibration::Calibrate::Request &req,
+                camera_calibration::Calibrate::Response &res) {
             std::string mode = req.mode;
             ROS_INFO_STREAM(mode);
             if (mode == "calibrate") {
@@ -116,10 +157,9 @@ int main(int argc, char **argv) {
  
     // initialize service   
     calibrate cal_obj(nh);
-    ros::ServiceServer ss = nh.advertiseService("calibrate", &calibrate::service_callback, &cal_obj);    
+    ros::ServiceServer ss = nh.advertiseService("calibrate",
+        &calibrate::service_callback, &cal_obj);    
 
     ros::spin();
-
     return 0;
 }
-
